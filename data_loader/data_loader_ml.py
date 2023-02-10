@@ -20,11 +20,11 @@ class DataRepo():
         self.X = deepcopy(X)
         self.y = deepcopy(y)
         self.pids = deepcopy(pids)
-        if demographic:
-            self.demographic = deepcopy(dself.demographic)
+        if demographic is not None:
+            self.demographic = deepcopy(demographic)
 
     def __getitem__(self, key):
-        if self.demographic:
+        if self.demographic is not None:
             return DataRepo(self.X[key], self.y[key], self.pids[key], self.demographic[key])
         else:
             return DataRepo(self.X[key], self.y[key], self.pids[key])

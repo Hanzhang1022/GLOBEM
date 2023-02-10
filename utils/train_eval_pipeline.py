@@ -35,6 +35,12 @@ def calc_cv_oneloop(clf: DepressionDetectionClassifierBase, data_repo: DataRepo,
             continue
         else:
             break
+    # print(f"in calc_cv_oneloop\n")
+    # if data_repo.demographic is not None:
+    #     print("we have included demographic info in this stage\n")
+    #     print(data_repo.demographic)
+    # else:
+    #     print("failure to do\n")
     return cross_validate(clf, X=data_repo.X, y=data_repo.y, groups=data_repo.pids,
                             cv = cv, n_jobs = 1,
                             scoring = utils_ml.results_report_sklearn, return_train_score=True)
