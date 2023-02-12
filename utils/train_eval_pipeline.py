@@ -14,6 +14,7 @@ from tensorflow.python.data.ops.dataset_ops import FlatMapDataset
 from sklearn.utils import indexable
 from sklearn.model_selection import check_cv
 from sklearn.base import is_classifier
+# from sklearn.utils.parallel import Parallel, delayed
 
 def cross_validate_demo(estimator: DepressionDetectionClassifierBase, data_repo: DataRepo, cv, n_jobs, scoring, return_train_score) -> Dict[str, List[float]]:
     """Perform cross validation with demographic info
@@ -34,8 +35,11 @@ def cross_validate_demo(estimator: DepressionDetectionClassifierBase, data_repo:
     
     cv = check_cv(cv, y, classifier=is_classifier(estimator))
 
-    # TODO: Add support for parallelization
+    # TODO: Add support for parallelization')
+    cnt = 0
     for train, test in cv.split(X, y, groups):
+        cnt += 1
+        print(f'CV {cnt}/{cv.get_n_splits()}: train {len(train)}, test {len(test)}')
         # deepcopy estimator
         _estimator = deepcopy(estimator)
         _estimator.fit(X.iloc[train], y.iloc[train])
@@ -79,11 +83,11 @@ def calc_cv_oneloop(clf: DepressionDetectionClassifierBase, data_repo: DataRepo,
     #     print(data_repo.demographic)
     # else:
     #     print("failure to do\n")
-    
+    '''
     return cross_validate(clf, X=data_repo.X, y=data_repo.y, groups=data_repo.pids,
                             cv = cv, n_jobs = 1,
                             scoring = utils_ml.results_report_sklearn, return_train_score=True)
-    
+    '''
     # TODO: add demographic info
     return cross_validate_demo(clf, data_repo=data_repo, cv = cv, n_jobs = 1,
                             scoring = utils_ml.results_report_sklearn_demo, return_train_score=True)
