@@ -152,6 +152,7 @@ class DepressionDetectionAlgorithm_ML_xu_personalized(DepressionDetectionAlgorit
         X_raw["pid"] = row["pid_new"]
         X_raw["pid_origin"] = row["pid"]
         X_raw["y_raw"] = row["y_raw"]
+        X_raw["demographic"] = row["demographic"]
         return X_raw
 
     def data_conversion_imputation(self, df_dis: pd.DataFrame, flag_train:bool = False):
@@ -227,7 +228,7 @@ class DepressionDetectionAlgorithm_ML_xu_personalized(DepressionDetectionAlgorit
         df_datapoint_extend["pid_new"] = df_datapoint_extend["pid"] + "@" + df_datapoint_extend["date"].apply(lambda x : x.strftime("%Y-%m-%d"))
         df_datapoint_extend_unravel = df_datapoint_extend.apply(lambda row: self.unravel_df(row, flag_train), axis = 1)
         df_datapoint_extend = pd.concat(list(df_datapoint_extend_unravel))
-        df_labels = df_datapoint_extend[["pid", "y_raw", "pid_origin"]].drop_duplicates(keep="first").set_index("pid")
+        df_labels = df_datapoint_extend[["pid", "y_raw", "pid_origin", "demographic"]].drop_duplicates(keep="first").set_index("pid")
 
         if (self.config["training_params"]["save_and_reload"] and os.path.exists(self.save_file_path)):
             with open(self.save_file_path, "rb") as f:
@@ -267,9 +268,10 @@ class DepressionDetectionAlgorithm_ML_xu_personalized(DepressionDetectionAlgorit
 
         y = df_labels["y_raw"][X.index]
         pids = df_labels["pid_origin"][X.index]
+        demographic = df_labels["demographic"][X.index]
         self.prep_dataset_key = deepcopy(dataset.key)
 
-        self.data_repo = DataRepo(X=X, y=y, pids=pids)
+        self.data_repo = DataRepo(X=X, y=y, pids=pids, demographic=demographic)
         self.data_repo.key = deepcopy(dataset.key)
         self.data_repo.prediction_target = deepcopy(dataset.prediction_target)
         return self.data_repo

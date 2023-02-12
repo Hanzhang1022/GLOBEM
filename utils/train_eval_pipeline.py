@@ -43,9 +43,16 @@ def cross_validate_demo(estimator: DepressionDetectionClassifierBase, data_repo:
         _estimator = deepcopy(estimator)
         _estimator.fit(X.iloc[train], y.iloc[train])
 
+        test_scores = scoring(_estimator, X.iloc[test], y.iloc[test], demographic.iloc[test])
+        if return_train_score:
+            train_scores = scoring(_estimator, X.iloc[train], y.iloc[train], demographic.iloc[train])
+
         y_pred = _estimator.predict(X.iloc[test])
         y_targ = y.iloc[test]
         demographic_test = demographic.iloc[test]
+        print(type(demographic))
+        print(type(demographic_test))
+        print(type(demographic_test.values[0]))
         demographic_test = pd.DataFrame([value.values for value in demographic_test.values], columns = demographic_test.iloc[0].index)
         
         # TODO: unifies the global variable
@@ -55,10 +62,6 @@ def cross_validate_demo(estimator: DepressionDetectionClassifierBase, data_repo:
         np.save(os.path.join(GV.folder_2, 'y_pred_{:03d}.npy'.format(GV.cnt)), y_pred)
         y_targ.to_csv(os.path.join(GV.folder_2, 'y_targ_{:03d}.csv'.format(GV.cnt)))
         demographic_test.to_csv(os.path.join(GV.folder_2, 'demographic_test_{:03d}.csv'.format(GV.cnt)))
-
-        test_scores = scoring(_estimator, X.iloc[test], y.iloc[test], demographic.iloc[test])
-        if return_train_score:
-            train_scores = scoring(_estimator, X.iloc[train], y.iloc[train], demographic.iloc[train])
     
     result = {'test_score': test_scores}
     if return_train_score:
