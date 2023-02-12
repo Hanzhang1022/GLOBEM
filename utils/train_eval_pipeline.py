@@ -11,6 +11,44 @@ from utils.cv_split import judge_corner_cvsplit
 from utils import path_definitions
 from tensorflow.python.data.ops.dataset_ops import FlatMapDataset
 
+from sklearn.utils import indexable
+from sklearn.model_selection import check_cv
+from sklearn.base import is_classifier
+
+def cross_validate_demo(estimator: DepressionDetectionClassifierBase, data_repo: DataRepo, cv, n_jobs, scoring, return_train_score) -> Dict[str, List[float]]:
+    """Perform cross validation with demographic info
+
+    Args:
+        estimator (DepressionDetectionClassifierBase): classififer
+        data_repo (DataRepo): data repo for cross validation
+        cv: cross validation split
+        n_jobs (int): number of jobs
+        scoring (Dict[str, Callable]): scoring functions
+        return_train_score (bool): return train score or not
+
+    Returns:
+        Dict[str, List[float]]: cross validation results
+    """
+    X, y, demographic, groups = data_repo.X, data_repo.y, data_repo.demographic, data_repo.pids
+    X, y, demographic, groups = indexable(X, y, demographic, groups)
+    
+    cv = check_cv(cv, y, classifier=is_classifier(estimator))
+
+    # TODO: Add support for parallelization
+    for train, test in cv.split(X, y, groups):
+        # deepcopy estimator
+        _estimator = deepcopy(estimator)
+        _estimator.fit(X.iloc[train], y.iloc[train])
+        test_scores = scoring(_estimator, X.iloc[test], y.iloc[test], demographic.iloc[test])
+        if return_train_score:
+            train_scores = scoring(_estimator, X.iloc[train], y.iloc[train], demographic.iloc[train])
+    
+    result = {'test_score': test_scores}
+    if return_train_score:
+        result['train_score'] = train_scores
+    
+    return result
+
 def calc_cv_oneloop(clf: DepressionDetectionClassifierBase, data_repo: DataRepo, random_seed_index: int,
     n_splits:int = 20) -> Dict[str, List[float]]:
     """Perform one around of n-fold cross validate
@@ -41,9 +79,15 @@ def calc_cv_oneloop(clf: DepressionDetectionClassifierBase, data_repo: DataRepo,
     #     print(data_repo.demographic)
     # else:
     #     print("failure to do\n")
+    
     return cross_validate(clf, X=data_repo.X, y=data_repo.y, groups=data_repo.pids,
                             cv = cv, n_jobs = 1,
                             scoring = utils_ml.results_report_sklearn, return_train_score=True)
+    
+    # TODO: add demographic info
+    return cross_validate_demo(clf, data_repo=data_repo, cv = cv, n_jobs = 1,
+                            scoring = utils_ml.results_report_sklearn_demo, return_train_score=True)
+
 @ray.remote
 def calc_cv_oneloop_multithread(clf, data_repo, repeat_num):
     """wrapper function with ray multi-thread computation"""
@@ -83,6 +127,7 @@ def single_dataset_model(dataset: DatasetDict, algorithm: DepressionDetectionAlg
         print("Prep data repo time: ", end1 - start)
         print("Prep model time: ", end2 - end1)
     
+    # TODO: cross validation
     if cv_evaluation:
         if (multi_thread_flag):
             data_repo_id = ray.put(data_repo)
