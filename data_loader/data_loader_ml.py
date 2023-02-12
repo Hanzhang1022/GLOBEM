@@ -164,10 +164,16 @@ def data_loader_single_dataset_label_based(institution:str, phase:int,
     df_demographic_file = pd.read_csv(data_factory.survey_folder[institution][phase] + "demo.csv", low_memory=False)
     df_demographic_file["pid"] = df_demographic_file["pid"].apply(lambda x : f"{x}#{institution}_{phase}")
     df_demographic_file = df_demographic_file.set_index("pid")
+    # some indices are not available in demographic files
+    missing_index = pd.Index(df_full_rawdata["pid"].unique()).difference(df_demographic_file.index)
+    # create a new dataframe with these missing indices
+    missing_demographic = pd.DataFrame(index=missing_index, columns=df_demographic_file.columns)
+    df_demographic_file = df_demographic_file.append(missing_demographic)
 
-    mode_dict = df_demographic_file.mode(axis=0).iloc[0, 1:].to_dict()
+    mode_dict = df_demographic_file.mode(axis=0).iloc[0, :].to_dict()
     # use the most frequent label to fill in
     df_demographic_file = df_demographic_file.fillna(mode_dict)
+    
     # change the str type to int
     df_demographic_file["race_DEMO"] = df_demographic_file["race_DEMO"].replace(data_factory.race_labels_to_value)
     # merge with the demographic data
