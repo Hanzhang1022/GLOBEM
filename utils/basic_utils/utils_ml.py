@@ -297,20 +297,20 @@ def results_report_demo(y_test = None, y_pred = None, demographic = None,
     demographic = pd.DataFrame([value.values for value in demographic.values], columns = demographic.iloc[0].index)
     # print(demographic)
     # print(demographic.columns)
-    results = results_calculate(y_pred=y_pred, y_test=y_test, verbose=verbose, labels=labels, return_confusion_mtx=return_confusion_mtx)
-    acc = results['acc']
-    print('accuracy: {}'.format(acc))
     for column in demographic.columns:
+        # print('column: {}'.format(column))
         unique_values = demographic[column].unique()
-        print('unique values for {}: {}'.format(column, unique_values))
+        # print('unique values: {}'.format(unique_values))
         for value in unique_values:
             # print('value: {}'.format(value))
-            # print(type(demographic[column].values))
             indices = np.argwhere(demographic[column].values == value).squeeze()
             # print('indices: {}'.format(indices))
             results = results_calculate(y_pred=y_pred[indices], y_test=y_test.iloc[indices], verbose=verbose, labels=labels, return_confusion_mtx=return_confusion_mtx)
-            acc = results['acc']
-            print('accuracy for {} = {}: {}'.format(column, value, acc))
+            for k, v in results.items():
+                pass # print('{} for {} = {}: {}'.format(k, column, value, v))
+    results = results_calculate(y_pred=y_pred, y_test=y_test, verbose=verbose, labels=labels, return_confusion_mtx=return_confusion_mtx)
+    for k, v in results.items():
+        pass # print('{}: {}'.format(k, v))
     return results
 
 def get_clf(clf_type, parameters, direct_param_flag = False):

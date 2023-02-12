@@ -44,3 +44,4 @@ evaluation_output/*
 !figures/*
 
 GLOBEM_Datasets.zip
+GLOBEM_Datasets/

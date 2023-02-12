@@ -36,13 +36,26 @@ def cross_validate_demo(estimator: DepressionDetectionClassifierBase, data_repo:
     cv = check_cv(cv, y, classifier=is_classifier(estimator))
 
     # TODO: Add support for parallelization')
-    cnt = 0
-    for train, test in cv.split(X, y, groups):
-        cnt += 1
-        print(f'CV {cnt}/{cv.get_n_splits()}: train {len(train)}, test {len(test)}')
+    print('n_splits: ', cv.get_n_splits())
+    for k, (train, test) in enumerate(cv.split(X, y, groups)):
+        print(f'CV {k + 1}/{cv.get_n_splits()}: train {len(train)}, test {len(test)}')
         # deepcopy estimator
         _estimator = deepcopy(estimator)
         _estimator.fit(X.iloc[train], y.iloc[train])
+
+        y_pred = _estimator.predict(X.iloc[test])
+        y_targ = y.iloc[test]
+        demographic_test = demographic.iloc[test]
+        demographic_test = pd.DataFrame([value.values for value in demographic_test.values], columns = demographic_test.iloc[0].index)
+        
+        # TODO: unifies the global variable
+        from utils.common_settings import GV
+        GV.cnt = GV.cnt + 1
+        # print('cnt: ', GV.cnt)
+        np.save(os.path.join(GV.folder_2, 'y_pred_{:03d}.npy'.format(GV.cnt)), y_pred)
+        y_targ.to_csv(os.path.join(GV.folder_2, 'y_targ_{:03d}.csv'.format(GV.cnt)))
+        demographic_test.to_csv(os.path.join(GV.folder_2, 'demographic_test_{:03d}.csv'.format(GV.cnt)))
+
         test_scores = scoring(_estimator, X.iloc[test], y.iloc[test], demographic.iloc[test])
         if return_train_score:
             train_scores = scoring(_estimator, X.iloc[train], y.iloc[train], demographic.iloc[train])
@@ -117,6 +130,10 @@ def single_dataset_model(dataset: DatasetDict, algorithm: DepressionDetectionAlg
     Returns:
         Tuple[DataRepo, ClassifierMixin, List[Dict[str, float]]]: (DataRepo, classifier, evalaution results)
     """
+    # TODO: unifies the global variable
+    from utils.common_settings import GV
+    GV.cnt = 0
+
     if (verbose>0):
         print("Start data prep...")
     start = time.time()
@@ -357,6 +374,13 @@ def single_dataset_driver(dataset_dict:Dict[str, Dict[str, DatasetDict]], pred_t
     clf_repo_ptds = {pred_target:{} for pred_target in pred_targets}
     results_repo_ptds = {pred_target:{} for pred_target in pred_targets}
     for pred_target, ds_key in itertools.product(pred_targets, ds_keys):
+        # TODO: unifies global variables
+        from utils.common_settings import GV
+        # print('folder_1: ', GV.folder_1)
+        GV.folder_2 = os.path.join(GV.folder_1, pred_target, ds_key)
+        mkdir(GV.folder_2)
+        # print('folder_2: ', GV.folder_2)
+
         if (verbose >= 1):
             print("=" * 10, pred_target, ds_key, "=" * 10)
         ds_tmp = deepcopy(dataset_dict[pred_target][ds_key])
