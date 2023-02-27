@@ -39,6 +39,8 @@ def cross_validate_demo(estimator: DepressionDetectionClassifierBase, data_repo:
     print('n_splits: ', cv.get_n_splits())
     for k, (train, test) in enumerate(cv.split(X, y, groups)):
         print(f'CV {k + 1}/{cv.get_n_splits()}: train {len(train)}, test {len(test)}')
+        # print('train: ', train)
+        # print('test: ', test)
         # deepcopy estimator
         _estimator = deepcopy(estimator)
         _estimator.fit(X.iloc[train], y.iloc[train])
@@ -50,9 +52,9 @@ def cross_validate_demo(estimator: DepressionDetectionClassifierBase, data_repo:
         y_pred = _estimator.predict(X.iloc[test])
         y_targ = y.iloc[test]
         demographic_test = demographic.iloc[test]
-        print(type(demographic))
-        print(type(demographic_test))
-        print(type(demographic_test.values[0]))
+        # print(type(demographic))
+        # print(type(demographic_test))
+        # print(type(demographic_test.values[0]))
         demographic_test = pd.DataFrame([value.values for value in demographic_test.values], columns = demographic_test.iloc[0].index)
         
         # TODO: unifies the global variable
@@ -88,6 +90,8 @@ def calc_cv_oneloop(clf: DepressionDetectionClassifierBase, data_repo: DataRepo,
 
     while True: 
         repeat_time += 1
+        # TODO: for dep_endterm
+        n_splits = 5
         cv = StratifiedGroupKFold(n_splits=min(n_splits, pidnum_min),shuffle=True,random_state=42+random_seed_index+repeat_time*1000)
         if (judge_corner_cvsplit(cv, data_repo)):
             continue

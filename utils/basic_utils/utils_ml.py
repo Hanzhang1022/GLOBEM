@@ -126,10 +126,23 @@ def results_calculate(y_test = None, y_pred = None, confusion_mtx = None, labels
     dictionary
         Results dict
     """
+    # print("y_test: ", y_test)
+    # print("y_pred: ", y_pred)
     if (confusion_mtx is None):
+        if isinstance(y_test, np.bool_):
+            y_test = [y_test]
+        if isinstance(y_pred, np.bool_):
+            y_pred = [y_pred]
         try:
             confusion_mtx = confusion_matrix(y_true = y_test, y_pred = y_pred, labels = [False,True])
         except:
+            # print("==== expect ====")
+            # print("y_test: ", y_test)
+            # print("y_pred: ", y_pred)
+            # print("type(y_test): ", type(y_test))
+            # print("type(y_pred): ", type(y_pred))
+            # print("y_test.shape: ", y_test.shape)
+            # print("y_pred.shape: ", y_pred.shape)
             confusion_mtx = confusion_matrix(y_true = y_test, y_pred = y_pred, labels = labels)
     else:
         confusion_mtx = np.array(confusion_mtx)
@@ -208,8 +221,6 @@ def results_report(y_test = None, y_pred = None,
     dictionary
         Results dict
     """
-    # print(type(y_test))
-    # print(type(y_pred))
     if (confusion_mtx is None):
         try:
             confusion_mtx = confusion_matrix(y_true = y_test, y_pred = y_pred, labels = [False,True])
